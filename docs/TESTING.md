@@ -7,6 +7,7 @@ Qeep has three automated test layers and one manual checklist.
 | SDK unit tests | `npm test` | WOTS sign/verify, checksum, phrase handling, wrong-phrase refusal |
 | Solidity tests | `cd contracts && forge test -vv` | Account rules: limits, nonces, replay, key rotation, failed calls, owner and limit changes, factory registry |
 | End-to-end | `npm run test:e2e` | The real contracts (solc 0.8.28, EVM london) and the real SDK agree byte for byte, on an in-memory EVM. No Foundry needed |
+| Testnet smoke | `QEEP_URL=https://qeep-wallet.vercel.app FACTORY=0x… npm --prefix e2e run testnet` | A running app's `/api/relay` and the deployed contracts on Mezo testnet: create, daily send, limit, Vault Key send, replay, restore. Set `MUSD_FUNDER_KEY` to a testnet key holding MUSD for real transfers |
 | Manual | below | The live app on Mezo testnet |
 
 `npm run test:e2e` may print a warning about `µWS` from Ganache. It is harmless.

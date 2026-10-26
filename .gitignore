@@ -9,3 +9,6 @@ next-env.d.ts
 .env*.local
 .DS_Store
 e2e/node_modules/
+
+# Rendered demo video (published on YouTube)
+video/

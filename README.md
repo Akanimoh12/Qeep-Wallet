@@ -10,7 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="#live-deployment">Live app</a> ·
+  <a href="https://qeep-wallet.vercel.app/">Live app</a> ·
+  <a href="https://youtu.be/wIADB8_tmKM">Demo video</a> ·
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
   <a href="docs/SECURITY.md">Security</a> ·
   <a href="docs/DEPLOYMENT.md">Deploy</a> ·
@@ -127,10 +128,11 @@ npm run dev                                    # http://localhost:3000
 | | |
 | --- | --- |
 | Network | Mezo testnet (chain ID 31611) |
-| App | `[ADD VERCEL URL]` |
-| QeepAccountFactory | `[ADD FACTORY ADDRESS]` |
+| App | https://qeep-wallet.vercel.app/ |
+| Demo video | https://youtu.be/wIADB8_tmKM |
+| QeepAccountFactory | [0xfd2f67cD354545712f9d8230170015d7e30d133A](https://explorer.test.mezo.org/address/0xfd2f67cD354545712f9d8230170015d7e30d133A) |
 | MUSD (testnet) | `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503` |
-| Relayer | `[ADD RELAYER ADDRESS]` |
+| Relayer | [0xC4098703a1a2C33a993ba0e798820617D84CB1D5](https://explorer.test.mezo.org/address/0xC4098703a1a2C33a993ba0e798820617D84CB1D5) |
 | Explorer | https://explorer.test.mezo.org |
 
 ## Tech stack
@@ -159,7 +161,7 @@ Qeep is honest about its limits. Full details are in [docs/SECURITY.md](docs/SEC
 
 | Name | Role | Links |
 | --- | --- | --- |
-| `[YOUR NAME]` | `[ROLE]` | `[X / LinkedIn]` |
+| Akanimoh | Founder and builder | [GitHub](https://github.com/Akanimoh12) |
 
 ## License
 

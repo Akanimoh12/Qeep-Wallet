@@ -3,7 +3,10 @@ import { config } from "./config";
 
 export function formatMusd(value: bigint, maxDecimals = 2): string {
   const n = Number(formatUnits(value, config.musdDecimals));
-  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: maxDecimals });
+  return n.toLocaleString("en-US", {
+    minimumFractionDigits: Math.min(2, maxDecimals),
+    maximumFractionDigits: maxDecimals,
+  });
 }
 
 /** Parses user input like "750" or "12.5" into MUSD wei. Returns null if invalid. */
