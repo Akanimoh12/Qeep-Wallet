@@ -1,0 +1,15 @@
+{
+  "name": "qeep-e2e",
+  "private": true,
+  "description": "End-to-end check: compiles the real contracts and drives them with the real SDK on an in-memory EVM. No Foundry needed.",
+  "type": "module",
+  "scripts": {
+    "test": "node compile-foundry.cjs && tsx run.ts",
+    "testnet": "tsx testnet.ts"
+  },
+  "devDependencies": {
+    "ganache": "7.9.2",
+    "solc": "0.8.28",
+    "tsx": "^4.19.0"
+  }
+}
