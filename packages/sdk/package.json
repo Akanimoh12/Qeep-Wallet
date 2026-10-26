@@ -1,0 +1,26 @@
+{
+  "name": "@qeep/sdk",
+  "version": "0.1.0",
+  "description": "Qeep SDK: post-quantum (WOTS) Vault Keys and helpers for Qeep MUSD smart accounts on Mezo.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src"],
+  "scripts": {
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@scure/bip39": "^2.4.0",
+    "viem": "^2.57.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
