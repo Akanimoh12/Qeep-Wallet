@@ -1,0 +1,20 @@
+{
+  "name": "qeep",
+  "private": true,
+  "description": "Qeep: a post-quantum ready MUSD wallet on Mezo.",
+  "workspaces": [
+    "packages/sdk",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @qeep/web",
+    "build": "npm run build -w @qeep/web",
+    "start": "npm run start -w @qeep/web",
+    "typecheck": "npm run typecheck -w @qeep/sdk && npm run typecheck -w @qeep/web",
+    "test": "npm run test -w @qeep/sdk",
+    "test:e2e": "npm --prefix e2e install && npm --prefix e2e test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
