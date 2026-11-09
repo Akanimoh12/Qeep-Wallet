@@ -166,6 +166,8 @@ respects the system "reduce motion" setting.
 | `/home` | Balance, spendable today, vault amount, actions, recent activity |
 | `/send` | Daily key send, or Vault Key approval when over the limit |
 | `/receive` | Address and QR code |
+| `/borrow` | Mezo loan: open (BTC → MUSD), add BTC, borrow more, repay, close; live collateral ratio and liquidation price |
+| `/earn` | Mezo Stability Pool: deposit and withdraw MUSD, BTC gains |
 | `/get-musd` | Borrow or swap on Mezo, faucet link on testnet |
 | `/security` | Account details, change limit (Vault Key), lock, remove from device |
 | `/activity` | Actions made from this device, link to the explorer |

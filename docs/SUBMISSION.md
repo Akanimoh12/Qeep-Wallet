@@ -53,7 +53,7 @@ Solidity 0.8.28, Foundry, Next.js 16, React 19, TypeScript, viem, @scure/bip39, 
 Vercel, Mezo testnet.
 
 **Track**
-Track 2 (Access and Distribution). [Optional: also Track 1 once Mezo Borrow actions are added.]
+Track 2 (Access and Distribution) and Track 1: Qeep borrows MUSD through BorrowerOperations and deposits to the Stability Pool from inside the wallet.
 
 **Chain deployed on**
 Mezo (testnet, chain ID 31611)

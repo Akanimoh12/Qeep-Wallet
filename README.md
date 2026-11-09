@@ -86,8 +86,22 @@ The full design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Lower friction (Track 2).** No seed-phrase wallet setup, no BTC needed for gas, installable on a phone as an app.
 - **Built for long-term holders.** Mezo's pitch is living off your Bitcoin for years. Qeep makes holding MUSD for years
   safer.
-- **Composable.** `vaultExecute` can call any contract, so the same Vault Key can approve Mezo Borrow, swaps and pools.
-  The SDK lets other Mezo apps add a post-quantum approval step.
+- **Mezo-native actions.** Qeep acts on Mezo itself from the user's smart account, every step approved with the
+  post-quantum Vault Key:
+  - **Borrow:** open a Mezo loan (BTC collateral → MUSD through BorrowerOperations), add BTC, borrow more, repay, close
+  - **Earn:** deposit MUSD to and withdraw from the Mezo Stability Pool
+  - **Live health:** BTC price from Mezo's PriceFeed, collateral ratio, liquidation price, interest rate and recovery
+    mode from TroveManager
+- **Composable.** `vaultExecute` can call any contract, and `@qeep/sdk` ships Mezo's testnet and mainnet addresses,
+  position reads, sorted-trove hints and calldata, so other Mezo apps can add a post-quantum approval step.
+
+## Business model
+
+Qeep pays the gas, so users never need BTC for fees. Gas on Mezo is cheap: about $0.015 for a daily send and $0.08 to
+open a loan at mainnet prices. Qeep earns a 0.10% fee only when users borrow MUSD or deposit to the Stability Pool
+through it, shown before signing and taken all-or-nothing with the action. Holding, sending, repaying and withdrawing
+are free. One minimum Mezo loan pays for months of a heavy user's gas. Details and measured costs:
+[docs/BUSINESS.md](docs/BUSINESS.md).
 
 ## Repository
 
@@ -130,7 +144,9 @@ npm run dev                                    # http://localhost:3000
 | Network | Mezo testnet (chain ID 31611) |
 | App | https://qeep-wallet.vercel.app/ |
 | Demo video | https://youtu.be/wIADB8_tmKM |
-| QeepAccountFactory | [0xfd2f67cD354545712f9d8230170015d7e30d133A](https://explorer.test.mezo.org/address/0xfd2f67cD354545712f9d8230170015d7e30d133A) |
+| QeepAccountFactory (verified) | [0xfd2f67cD354545712f9d8230170015d7e30d133A](https://explorer.test.mezo.org/address/0xfd2f67cD354545712f9d8230170015d7e30d133A?tab=contract) |
+| QeepAccount (verified sample) | [0x4e7459a7387b9d3634f7b9069d0e148290fa419d](https://explorer.test.mezo.org/address/0x4e7459a7387b9d3634f7b9069d0e148290fa419d?tab=contract) |
+| Mezo contracts used | BorrowerOperations, TroveManager, PriceFeed, StabilityPool, HintHelpers, SortedTroves ([addresses](packages/sdk/src/mezo.ts)) |
 | MUSD (testnet) | `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503` |
 | Relayer | [0xC4098703a1a2C33a993ba0e798820617D84CB1D5](https://explorer.test.mezo.org/address/0xC4098703a1a2C33a993ba0e798820617D84CB1D5) |
 | Explorer | https://explorer.test.mezo.org |
