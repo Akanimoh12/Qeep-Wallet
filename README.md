@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://qeep-wallet.vercel.app/">Live app</a> ·
   <a href="https://youtu.be/wIADB8_tmKM">Demo video</a> ·
+  <a href="docs/Qeep-Pitch-Deck.pptx">Deck</a> ·
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
   <a href="docs/SECURITY.md">Security</a> ·
   <a href="docs/DEPLOYMENT.md">Deploy</a> ·

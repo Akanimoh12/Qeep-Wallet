@@ -8,7 +8,7 @@ submitting.
 - [ ] Logo uploaded: `brand/qeep-app-icon-1024.png` (square). Cover image: `brand/qeep-cover-1920x1080.png`
 - [x] Live testnet link: https://qeep-wallet.vercel.app/
 - [x] Public GitHub repository (https://github.com/Akanimoh12/Qeep-Wallet), README addresses filled in
-- [ ] Deck (outline below)
+- [x] Deck: [docs/Qeep-Pitch-Deck.pptx](Qeep-Pitch-Deck.pptx)
 - [x] Product video: https://youtu.be/wIADB8_tmKM
 - [ ] AKINDO form (answers below)
 - [ ] Relayer funded with test BTC before judging starts (November 16)
