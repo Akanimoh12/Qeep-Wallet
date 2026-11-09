@@ -9,7 +9,7 @@ submitting.
 - [x] Live testnet link: https://qeep-wallet.vercel.app/
 - [x] Public GitHub repository (https://github.com/Akanimoh12/Qeep-Wallet), README addresses filled in
 - [x] Deck: [docs/Qeep-Pitch-Deck.pptx](Qeep-Pitch-Deck.pptx)
-- [x] Product video: https://youtu.be/wIADB8_tmKM
+- [x] Product video (1:53): https://youtu.be/Lpyyo1-0ECg
 - [ ] AKINDO form (answers below)
 - [ ] Relayer funded with test BTC before judging starts (November 16)
 

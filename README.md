@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://qeep-wallet.vercel.app/">Live app</a> ·
-  <a href="https://youtu.be/wIADB8_tmKM">Demo video</a> ·
+  <a href="https://youtu.be/Lpyyo1-0ECg">Demo video (1:53)</a> ·
   <a href="docs/Qeep-Pitch-Deck.pptx">Deck</a> ·
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
   <a href="docs/SECURITY.md">Security</a> ·
@@ -144,7 +144,7 @@ npm run dev                                    # http://localhost:3000
 | --- | --- |
 | Network | Mezo testnet (chain ID 31611) |
 | App | https://qeep-wallet.vercel.app/ |
-| Demo video | https://youtu.be/wIADB8_tmKM |
+| Demo video (1:53) | https://youtu.be/Lpyyo1-0ECg |
 | QeepAccountFactory (verified) | [0xfd2f67cD354545712f9d8230170015d7e30d133A](https://explorer.test.mezo.org/address/0xfd2f67cD354545712f9d8230170015d7e30d133A?tab=contract) |
 | QeepAccount (verified sample) | [0x4e7459a7387b9d3634f7b9069d0e148290fa419d](https://explorer.test.mezo.org/address/0x4e7459a7387b9d3634f7b9069d0e148290fa419d?tab=contract) |
 | Mezo contracts used | BorrowerOperations, TroveManager, PriceFeed, StabilityPool, HintHelpers, SortedTroves ([addresses](packages/sdk/src/mezo.ts)) |
