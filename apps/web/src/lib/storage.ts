@@ -17,7 +17,19 @@ export type WalletRecord = {
 
 export type HistoryItem = {
   hash: Hex;
-  kind: "sent" | "vault-sent" | "limit" | "restore" | "created";
+  kind:
+    | "sent"
+    | "vault-sent"
+    | "limit"
+    | "restore"
+    | "created"
+    | "borrow"
+    | "repay"
+    | "collateral"
+    | "loan-closed"
+    | "sp-deposit"
+    | "sp-withdraw"
+    | "approve";
   amount?: string;
   to?: Address;
   at: number;

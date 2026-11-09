@@ -37,10 +37,18 @@ function relayerAccount(): PrivateKeyAccount {
  * viem's writeContract takes its gas from eth_fillTransaction when the node offers it, and Mezo's
  * eth_fillTransaction returns only the intrinsic gas (no execution), so the node then rejects the
  * transaction below the EIP-7623 floor. eth_estimateGas on Mezo is correct, so we use it directly.
+ *
+ * `innerGas` is added for vault actions: vaultExecute does not revert when its inner call fails, so
+ * the node's estimate can settle on a limit where the inner call runs out of gas, which retires the
+ * one-time key and moves nothing. Unused gas is not charged, so over-providing is cheap.
  */
-async function submit(relayer: PrivateKeyAccount, call: { address: Address } & EncodeFunctionDataParameters) {
+async function submit(
+  relayer: PrivateKeyAccount,
+  call: { address: Address } & EncodeFunctionDataParameters,
+  innerGas = 0n,
+) {
   const data = encodeFunctionData(call as EncodeFunctionDataParameters);
-  const [gas, nonce, fees] = await Promise.all([
+  const [outerGas, nonce, fees] = await Promise.all([
     publicClient.estimateGas({ account: relayer.address, to: call.address, data }),
     publicClient.getTransactionCount({ address: relayer.address, blockTag: "pending" }),
     publicClient.estimateFeesPerGas(),
@@ -51,7 +59,7 @@ async function submit(relayer: PrivateKeyAccount, call: { address: Address } & E
     to: call.address,
     data,
     nonce,
-    gas: (gas * 12n) / 10n,
+    gas: ((outerGas + innerGas) * 12n) / 10n,
     maxFeePerGas: fees.maxFeePerGas,
     maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
   });
@@ -144,21 +152,27 @@ export async function handleRelay(body: RelayRequest): Promise<RelayResponse> {
         await assertQeepAccount(account);
         if (!Array.isArray(body.signature) || body.signature.length !== 67) throw new Error("Invalid Vault signature");
         const signature = body.signature.map((s, i) => b32(s, `signature[${i}]`));
+        const target = addr(body.target, "target");
+        const value = uint(body.value, "value");
+        const data = hexData(body.data, "data");
 
-        const { request } = await publicClient.simulateContract({
+        // Gas for the inner call, run as the account. This also refuses an action whose call
+        // would fail, before its one-time key is spent on-chain.
+        const innerGas = await publicClient
+          .estimateGas({ account, to: target, value, data })
+          .catch((e) => {
+            throw new Error(`The action would fail: ${revertReason(e)}`);
+          });
+
+        const { request, result } = await publicClient.simulateContract({
           account: relayer,
           address: account,
           abi: qeepAccountAbi,
           functionName: "vaultExecute",
-          args: [
-            addr(body.target, "target"),
-            uint(body.value, "value"),
-            hexData(body.data, "data"),
-            b32(body.nextKeyHash, "nextKeyHash"),
-            signature as unknown as VaultSignature,
-          ],
+          args: [target, value, data, b32(body.nextKeyHash, "nextKeyHash"), signature as unknown as VaultSignature],
         });
-        return { hash: await submit(relayer, request) };
+        if (!result[0]) throw new Error("The action would fail on-chain, so it was not sent.");
+        return { hash: await submit(relayer, request, innerGas) };
       }
 
       default:

@@ -6,7 +6,9 @@
  *   QEEP_URL=http://localhost:3000 FACTORY=0x… npm --prefix e2e run testnet
  *
  * Optional: MUSD_FUNDER_KEY, a testnet key holding MUSD. When set, 100 MUSD is moved into the new account
- * so real daily and vault sends run. Without it, sends are checked up to the transfer itself.
+ * so real daily and vault sends and Mezo Stability Pool actions run. If that key also holds more than
+ * TROVE_COLL (default 0.04) test BTC, a full Mezo loan lifecycle runs too: open, borrow, repay, add, close.
+ * Without it, sends are checked up to the transfer itself.
  */
 import assert from "node:assert/strict";
 import {
@@ -21,12 +23,25 @@ import {
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import {
+  addCollCall,
+  approveCall,
+  borrowMoreCall,
+  closeTroveCall,
   createVaultPhrase,
   erc20Abi,
   firstVaultKeyHash,
+  MEZO_CONTRACTS,
   mezoTestnet,
   MUSD_TESTNET,
   musdTransferCall,
+  openTroveCall,
+  openTroveDebt,
+  provideToSPCall,
+  readMezoPosition,
+  repayCall,
+  troveHints,
+  TroveStatus,
+  withdrawFromSPCall,
   qeepAccountAbi,
   qeepFactoryAbi,
   setDailyLimitCall,
@@ -42,6 +57,7 @@ const FACTORY = process.env.FACTORY as Address;
 const MUSD = (process.env.MUSD ?? MUSD_TESTNET) as Address;
 const RPC = process.env.RPC_URL ?? "https://rpc.test.mezo.org";
 const CHAIN_ID = mezoTestnet.id;
+const mz = MEZO_CONTRACTS[CHAIN_ID];
 if (!FACTORY) throw new Error("Set FACTORY to the deployed QeepAccountFactory address.");
 
 const pub = createPublicClient({ chain: mezoTestnet, transport: http(RPC) });
@@ -83,13 +99,13 @@ async function spendBody(signer: PrivateKeyAccount, account: Address, to: Addres
   return { action: "spend", account, to, amount: amount.toString(), deadline: deadline.toString(), signature };
 }
 
-async function vaultBody(seed: Hex, account: Address, target: Address, data: Hex) {
+async function vaultBody(seed: Hex, account: Address, target: Address, data: Hex, value = 0n) {
   const [nonce, currentKeyHash] = await Promise.all([
     read<bigint>("vaultNonce", account),
     read<Hex>("vaultKeyHash", account),
   ]);
-  await pub.call({ account, to: target, data }); // dry-run as the account, like the app
-  const s = signVaultAction({ seed, chainId: CHAIN_ID, account, nonce, currentKeyHash, target, data });
+  await pub.call({ account, to: target, data, value }); // dry-run as the account, like the app
+  const s = signVaultAction({ seed, chainId: CHAIN_ID, account, nonce, currentKeyHash, target, data, value });
   return {
     action: "vault",
     account,
@@ -101,8 +117,8 @@ async function vaultBody(seed: Hex, account: Address, target: Address, data: Hex
   };
 }
 
-async function vault(seed: Hex, account: Address, target: Address, data: Hex) {
-  const body = await vaultBody(seed, account, target, data);
+async function vault(seed: Hex, account: Address, target: Address, data: Hex, value = 0n) {
+  const body = await vaultBody(seed, account, target, data, value);
   const r = await relay(body);
   const failed = parseEventLogs({ abi: qeepAccountAbi, eventName: "VaultCallFailed", logs: r.receipt.logs });
   assert.equal(failed.length, 0, "vault call failed on-chain");
@@ -209,6 +225,82 @@ async function main() {
     const big = await vault(seed, account, MUSD, musdTransferCall(recipient, parseUnits("60", 18)));
     assert.equal((await musdBal(recipient)) - before, parseUnits("60", 18));
     ok(`Vault Key sent 60 MUSD (${tx(big.hash!)}, gas ${big.receipt.gasUsed})`);
+  }
+
+  // ---- Mezo: Stability Pool (needs the 30 MUSD left after the sends)
+  if (funded) {
+    await vault(seed, account, mz.musd, approveCall(mz.stabilityPool));
+    const dep = await vault(seed, account, mz.stabilityPool, provideToSPCall(parseUnits("20", 18)));
+    let pos = await readMezoPosition(pub, mz, account);
+    assert.equal(pos.stabilityPool.deposit, parseUnits("20", 18));
+    const wd = await vault(seed, account, mz.stabilityPool, withdrawFromSPCall(parseUnits("5", 18)));
+    pos = await readMezoPosition(pub, mz, account);
+    assert.equal(pos.stabilityPool.deposit, parseUnits("15", 18));
+    ok(`Mezo Stability Pool: approved, deposited 20 (${tx(dep.hash!)}), withdrew 5 (${tx(wd.hash!)}); 15 earning`);
+  }
+
+  // ---- Mezo: a full loan (trove) lifecycle, when the funder can lend BTC collateral
+  const coll = parseUnits(process.env.TROVE_COLL ?? "0.04", 18);
+  const funderBtc = process.env.MUSD_FUNDER_KEY
+    ? await pub.getBalance({ address: privateKeyToAccount(process.env.MUSD_FUNDER_KEY as Hex).address })
+    : 0n;
+  if (funded && funderBtc > coll + parseUnits("0.002", 18)) {
+    const funder = createWalletClient({
+      chain: mezoTestnet,
+      transport: http(RPC),
+      account: privateKeyToAccount(process.env.MUSD_FUNDER_KEY as Hex),
+    });
+    const [fees, nonce] = await Promise.all([
+      pub.estimateFeesPerGas(),
+      pub.getTransactionCount({ address: funder.account.address, blockTag: "pending" }),
+    ]);
+    await pub.waitForTransactionReceipt({
+      hash: await funder.sendTransaction({ to: account, value: coll, gas: 50_000n, nonce, ...fees }),
+    });
+
+    const borrow = parseUnits("1800", 18);
+    const debt = await openTroveDebt(pub, mz, borrow);
+    let h = await troveHints(pub, mz, coll, debt);
+    const open = await vault(seed, account, mz.borrowerOperations, openTroveCall(borrow, h.upper, h.lower), coll);
+    let pos = await readMezoPosition(pub, mz, account);
+    assert.equal(pos.trove.status, TroveStatus.Active);
+    assert.equal(pos.trove.coll, coll);
+    assert.equal(await musdBal(account), parseUnits("1815", 18));
+    ok(`Mezo loan opened from the Qeep account: ${formatUnits(coll, 18)} BTC → 1,800 MUSD, ratio ${Number(pos.trove.icr / 10n ** 14n) / 100}% (${tx(open.hash!)}, gas ${open.receipt.gasUsed})`);
+
+    h = await troveHints(pub, mz, coll, pos.trove.debt + parseUnits("10", 18));
+    await vault(seed, account, mz.borrowerOperations, borrowMoreCall(parseUnits("10", 18), h.upper, h.lower));
+    h = await troveHints(pub, mz, coll, pos.trove.debt);
+    await vault(seed, account, mz.borrowerOperations, repayCall(parseUnits("10", 18), h.upper, h.lower));
+    const extra = parseUnits("0.001", 18);
+    const before = await pub.getBalance({ address: account });
+    await pub.waitForTransactionReceipt({
+      hash: await funder.sendTransaction({
+        to: account,
+        value: extra,
+        gas: 50_000n,
+        nonce: await pub.getTransactionCount({ address: funder.account.address, blockTag: "pending" }),
+        ...fees,
+      }),
+    });
+    h = await troveHints(pub, mz, coll + extra, pos.trove.debt);
+    await vault(seed, account, mz.borrowerOperations, addCollCall(h.upper, h.lower), extra);
+    pos = await readMezoPosition(pub, mz, account);
+    assert.equal(pos.trove.coll, coll + extra);
+    ok("Mezo loan: borrowed 10 more, repaid 10 (no approval needed), added 0.001 BTC collateral");
+
+    const close = await vault(seed, account, mz.borrowerOperations, closeTroveCall());
+    pos = await readMezoPosition(pub, mz, account);
+    assert.equal(pos.trove.status, TroveStatus.ClosedByOwner);
+    assert.ok((await pub.getBalance({ address: account })) >= before + coll, "collateral returned");
+    ok(`Mezo loan closed with the Vault Key; ${formatUnits(coll + extra, 18)} BTC back in the account (${tx(close.hash!)})`);
+
+    // Return the test BTC to the funder: this throwaway account's keys are gone after the run.
+    const sweep = await pub.getBalance({ address: account });
+    await vault(seed, account, funder.account.address, "0x", sweep);
+    ok(`returned ${formatUnits(sweep, 18)} BTC to the funder with a Vault Key action`);
+  } else if (funded) {
+    console.log(`  · funder has ${formatUnits(funderBtc, 18)} BTC; set TROVE_COLL or fund it to run the loan lifecycle`);
   }
 
   // ---- restore on a "new device"

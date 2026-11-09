@@ -20,6 +20,23 @@ function Svg({ size = 22, children }: { size?: number; children: ReactNode }) {
   );
 }
 
+/** Borrow: a coin drawn out of a vault. */
+export const BorrowIcon = () => (
+  <Svg>
+    <circle cx="11" cy="8" r="4.5" />
+    <path d="M11 6v4M9.5 7.2h2.3a.9.9 0 010 1.8H10" />
+    <path d="M3.5 14.5h15M5.5 14.5v4h11v-4" />
+  </Svg>
+);
+
+/** Earn: rising bars. */
+export const EarnIcon = () => (
+  <Svg>
+    <path d="M4 18V13M9 18V9M14 18v-6M19 18V5" />
+    <path d="M3 7.5L8 4l4 3 6-4" />
+  </Svg>
+);
+
 export const BackIcon = () => (
   <Svg size={20}>
     <path d="M13.5 4.5l-6.5 6.5 6.5 6.5" />

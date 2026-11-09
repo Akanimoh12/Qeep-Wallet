@@ -31,10 +31,10 @@ function ReceiveScreen() {
 
   return (
     <div className="screen">
-      <Header title="Receive MUSD" />
+      <Header title="Receive" />
       <p className="lead">
-        Share this address to receive MUSD on {config.isTestnet ? "Mezo testnet" : "Mezo"}. Only send MUSD on Mezo to
-        this address.
+        Share this address to receive MUSD or BTC on {config.isTestnet ? "Mezo testnet" : "Mezo"}. BTC you send here
+        can back a Mezo loan. Only send assets on Mezo to this address.
       </p>
       {qr && (
         // eslint-disable-next-line @next/next/no-img-element

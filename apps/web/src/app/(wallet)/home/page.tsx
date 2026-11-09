@@ -3,15 +3,61 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/Brand";
-import { LockIcon, PlusIcon, ReceiveIcon, SendIcon, ShieldIcon } from "@/components/Icons";
+import { TroveStatus } from "@qeep/sdk";
+import { BorrowIcon, EarnIcon, ReceiveIcon, SendIcon, ShieldIcon } from "@/components/Icons";
 import { RequireWallet } from "@/components/RequireWallet";
 import { TabBar } from "@/components/TabBar";
 import { config } from "@/lib/config";
-import { formatMusd } from "@/lib/format";
+import { formatMusd, formatRatio, loanHealth } from "@/lib/format";
+import { useMezoPosition } from "@/lib/use-mezo";
 import { loadHistory, type HistoryItem } from "@/lib/storage";
 import { useAccountState } from "@/lib/use-account-state";
 import { useWallet } from "@/lib/wallet";
 import { HistoryRow } from "@/components/HistoryRow";
+
+/** Summary of the account's Mezo positions, or an invitation to start one. */
+function MezoCard() {
+  const { wallet } = useWallet();
+  const { state: mz } = useMezoPosition(wallet?.account);
+  if (!mz) return null;
+  const loan = mz.trove.status === TroveStatus.Active;
+  const earning = mz.stabilityPool.deposit > 0n;
+
+  if (!loan && !earning) {
+    return (
+      <Link href="/borrow" className="card row between" style={{ textDecoration: "none", color: "var(--text)" }}>
+        <span className="stack" style={{ gap: 2 }}>
+          <strong className="small">Borrow MUSD against your BTC</strong>
+          <span className="muted tiny">BTC ${formatMusd(mz.price, 0)} · approved by your Vault Key</span>
+        </span>
+        <span style={{ color: "var(--mint)" }}>
+          <BorrowIcon />
+        </span>
+      </Link>
+    );
+  }
+
+  const health = loan ? loanHealth(mz.trove.icr) : null;
+  return (
+    <section className="card stack">
+      <strong className="small">On Mezo</strong>
+      {loan && (
+        <Link href="/borrow" className="row between small" style={{ textDecoration: "none", color: "var(--text)" }}>
+          <span className="muted">Loan · {formatMusd(mz.trove.debt)} MUSD</span>
+          <span style={{ color: health!.color, fontWeight: 600 }}>
+            {formatRatio(mz.trove.icr)} · {health!.label}
+          </span>
+        </Link>
+      )}
+      {earning && (
+        <Link href="/earn" className="row between small" style={{ textDecoration: "none", color: "var(--text)" }}>
+          <span className="muted">Stability Pool</span>
+          <span style={{ fontWeight: 600 }}>{formatMusd(mz.stabilityPool.deposit)} MUSD</span>
+        </Link>
+      )}
+    </section>
+  );
+}
 
 function HomeScreen() {
   const { wallet } = useWallet();
@@ -70,17 +116,17 @@ function HomeScreen() {
             </span>
             Receive
           </Link>
-          <Link href="/get-musd" className="action">
+          <Link href="/borrow" className="action">
             <span style={{ color: "var(--mint)" }}>
-              <PlusIcon />
+              <BorrowIcon />
             </span>
-            Get MUSD
+            Borrow
           </Link>
-          <Link href="/security" className="action">
+          <Link href="/earn" className="action">
             <span style={{ color: "var(--mint)" }}>
-              <LockIcon />
+              <EarnIcon />
             </span>
-            Vault
+            Earn
           </Link>
         </nav>
 
@@ -98,6 +144,8 @@ function HomeScreen() {
             <span className="muted tiny">Needs Vault Key</span>
           </div>
         </div>
+
+        <MezoCard />
 
         <section className="stack" style={{ gap: 4 }}>
           <div className="row between" style={{ paddingBottom: 6 }}>

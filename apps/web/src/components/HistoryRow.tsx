@@ -8,7 +8,16 @@ const LABELS: Record<HistoryItem["kind"], { icon: string; title: string }> = {
   limit: { icon: "⚙", title: "Daily limit changed" },
   restore: { icon: "↺", title: "Wallet restored" },
   created: { icon: "✓", title: "Wallet created" },
+  borrow: { icon: "↓", title: "Borrowed on Mezo" },
+  repay: { icon: "↑", title: "Repaid Mezo loan" },
+  collateral: { icon: "₿", title: "Collateral changed" },
+  "loan-closed": { icon: "✓", title: "Mezo loan closed" },
+  "sp-deposit": { icon: "↗", title: "Deposited to Stability Pool" },
+  "sp-withdraw": { icon: "↙", title: "Withdrew from Stability Pool" },
+  approve: { icon: "✓", title: "Allowed Stability Pool" },
 };
+
+const INCOMING = new Set<HistoryItem["kind"]>(["borrow", "sp-withdraw"]);
 
 export function HistoryRow({ item }: { item: HistoryItem }) {
   const label = LABELS[item.kind];
@@ -25,7 +34,12 @@ export function HistoryRow({ item }: { item: HistoryItem }) {
           {when}
         </span>
       </span>
-      {item.amount && <span style={{ fontSize: 14, fontWeight: 600 }}>−{item.amount}</span>}
+      {item.amount && (
+        <span style={{ fontSize: 14, fontWeight: 600 }}>
+          {INCOMING.has(item.kind) ? "+" : "−"}
+          {item.amount}
+        </span>
+      )}
     </a>
   );
 }
